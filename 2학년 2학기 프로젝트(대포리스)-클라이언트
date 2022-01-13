@@ -1,0 +1,526 @@
+#include <winsock2.h>
+#include <windows.h>
+#include <iostream>
+#include <process.h>
+#include <stdlib.h>
+#include <time.h>
+#include<conio.h>
+
+#pragma comment (lib, "ws2_32.lib")
+#pragma warning(disable:4996)
+
+using namespace std;
+
+int map[10][10]{        //맵
+   {1,1,1,1,1,1,1,1,1,1},
+   {1,1,1,2,2,1,1,1,1,1},
+   {1,1,1,2,2,1,1,1,1,1},
+   {1,1,1,1,1,1,1,1,1,1},
+   {1,1,1,1,1,1,1,2,2,1},
+   {1,1,1,1,1,1,1,2,2,1},
+   {1,2,2,1,1,1,1,1,1,1},
+   {1,2,2,1,1,2,2,1,1,1},
+   {1,1,1,1,1,2,2,1,1,1},
+   {1,1,1,1,1,1,1,1,1,1}
+};
+int x, y, x4, y4, x2, y2, x3, y3;      //대포 좌표 변수
+bool Fog = 0;      //안개모드 유무 변수
+int speed[3] = { 0, };      //속도 설정 변수
+void print() {      //출력문 함수
+    if (Fog == 0) {     //안개모드가 아니라면
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                if (map[i][j] == 1) { cout << "□"; }      //1은 맵의 빈공간을 의미
+                else if (map[i][j] == 2) { cout << "■"; }      //2은 벽을 의미
+                else if (map[i][j] == 11) { cout << "▲"; }      //대포의 방향마다 다른값 설정
+                else if (map[i][j] == 12) { cout << "◀"; }
+                else if (map[i][j] == 13) { cout << "▶"; }
+                else if (map[i][j] == 14) { cout << "▼"; }
+                else if (map[i][j] == 21) { cout << "△"; }      //다른 클라이언트들의 대포를 의미(그 대포의 방향마다 다른값)
+                else if (map[i][j] == 22) { cout << "◁"; }
+                else if (map[i][j] == 23) { cout << "▷"; }
+                else if (map[i][j] == 24) { cout << "▽"; }
+            }
+            cout << endl;
+        }
+        cout << endl;
+    }
+    else {      //안개모드 일때
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                if (map[i][j] == 2) { cout << "■"; }        //벽이 아닐때를 확인하기위해
+                else {
+                    if (map[x][y] == 11) {      //현재 자신의 대포의 방향에 따라 설정
+                        if (j == y && i <= x && i >= x - 5) {
+                            if (map[i][j] == 1) { cout << "□"; }      
+                            else if (map[i][j] == 2) { cout << "■"; }      
+                            else if (map[i][j] == 11) { cout << "▲"; }     
+                            else if (map[i][j] == 12) { cout << "◀"; }
+                            else if (map[i][j] == 13) { cout << "▶"; }
+                            else if (map[i][j] == 14) { cout << "▼"; }
+                            else if (map[i][j] == 21) { cout << "△"; }      
+                            else if (map[i][j] == 22) { cout << "◁"; }
+                            else if (map[i][j] == 23) { cout << "▷"; }
+                            else if (map[i][j] == 24) { cout << "▽"; }
+                        }
+                        else { cout << "□"; }
+                    }
+                    else if (map[x][y] == 12) {
+                        if (i == x && j <= y && j >= y - 5) {
+                            if (map[i][j] == 1) { cout << "□"; }    
+                            else if (map[i][j] == 2) { cout << "■"; }    
+                            else if (map[i][j] == 11) { cout << "▲"; }   
+                            else if (map[i][j] == 12) { cout << "◀"; }
+                            else if (map[i][j] == 13) { cout << "▶"; }
+                            else if (map[i][j] == 14) { cout << "▼"; }
+                            else if (map[i][j] == 21) { cout << "△"; }     
+                            else if (map[i][j] == 22) { cout << "◁"; }
+                            else if (map[i][j] == 23) { cout << "▷"; }
+                            else if (map[i][j] == 24) { cout << "▽"; }
+                        }
+                        else { cout << "□"; }
+
+                    }
+                    else if (map[x][y] == 13) {
+
+                        if (i == x && j >= y && j <= y + 5) {
+                            if (map[i][j] == 1) { cout << "□"; }      
+                            else if (map[i][j] == 2) { cout << "■"; }     
+                            else if (map[i][j] == 11) { cout << "▲"; }      
+                            else if (map[i][j] == 12) { cout << "◀"; }
+                            else if (map[i][j] == 13) { cout << "▶"; }
+                            else if (map[i][j] == 14) { cout << "▼"; }
+                            else if (map[i][j] == 21) { cout << "△"; }      
+                            else if (map[i][j] == 22) { cout << "◁"; }
+                            else if (map[i][j] == 23) { cout << "▷"; }
+                            else if (map[i][j] == 24) { cout << "▽"; }
+                        }
+                        else { cout << "□"; }
+
+                    }
+                    else if (map[x][y] == 14) {
+                        if (j == y && i >= x && i <= x + 5) {
+                            if (map[i][j] == 1) { cout << "□"; }     
+                            else if (map[i][j] == 2) { cout << "■"; }     
+                            else if (map[i][j] == 11) { cout << "▲"; }     
+                            else if (map[i][j] == 12) { cout << "◀"; }
+                            else if (map[i][j] == 13) { cout << "▶"; }
+                            else if (map[i][j] == 14) { cout << "▼"; }
+                            else if (map[i][j] == 21) { cout << "△"; }      
+                            else if (map[i][j] == 22) { cout << "◁"; }
+                            else if (map[i][j] == 23) { cout << "▷"; }
+                            else if (map[i][j] == 24) { cout << "▽"; }
+                        }
+                        else { cout << "□"; }
+
+                    }
+                }
+            }
+            cout << endl;
+        }
+        cout << endl;
+    }
+}       
+
+void _print(int a) {        //대포가 위치하는 가로줄 출력문 함수
+    if (Fog == 0) {
+        for (int i = 0; i < 10; i++) {
+            if (map[a][i] == 1) { cout << "  "; }      //대포를 땅위에 있게 하기위한 빈공간
+            else if (map[a][i] == 2) { cout << "■"; }      
+            else if (map[a][i] == 11) { cout << "▲"; }      
+            else if (map[a][i] == 12) { cout << "◀"; }
+            else if (map[a][i] == 13) { cout << "▶"; }
+            else if (map[a][i] == 14) { cout << "▼"; }
+            else if (map[a][i] == 21) { cout << "△"; }      
+            else if (map[a][i] == 22) { cout << "◁"; }
+            else if (map[a][i] == 23) { cout << "▷"; }
+            else if (map[a][i] == 24) { cout << "▽"; }
+        }cout << endl;
+        for (int i = 0; i < 10; i++) {
+            cout << "□";
+        }
+    }
+    else {
+        for (int i = 0; i < 10; i++) {
+            if (map[a][i] == 2) { cout << "■"; }
+            else {
+                if (map[x][y] == 12 && i <= y && i >= y - 5) {
+                    if (map[a][i] == 1) { cout << "  "; }      
+                    else if (map[a][i] == 11) { cout << "▲"; }      
+                    else if (map[a][i] == 12) { cout << "◀"; }
+                    else if (map[a][i] == 13) { cout << "▶"; }
+                    else if (map[a][i] == 14) { cout << "▼"; }
+                    else if (map[a][i] == 21) { cout << "△"; }      
+                    else if (map[a][i] == 22) { cout << "◁"; }
+                    else if (map[a][i] == 23) { cout << "▷"; }
+                    else if (map[a][i] == 24) { cout << "▽"; }
+                }
+                else if (map[x][y] == 13 && i >= y && i <= y + 5) {
+                    if (map[a][i] == 1) { cout << "  "; }      
+                    else if (map[a][i] == 11) { cout << "▲"; }     
+                    else if (map[a][i] == 12) { cout << "◀"; }
+                    else if (map[a][i] == 13) { cout << "▶"; }
+                    else if (map[a][i] == 14) { cout << "▼"; }
+                    else if (map[a][i] == 21) { cout << "△"; }      
+                    else if (map[a][i] == 22) { cout << "◁"; }
+                    else if (map[a][i] == 23) { cout << "▷"; }
+                    else if (map[a][i] == 24) { cout << "▽"; }
+                }
+                else {
+                    if (map[a][i] == 11) { cout << "▲"; }     
+                    else if (map[a][i] == 12) { cout << "◀"; }
+                    else if (map[a][i] == 13) { cout << "▶"; }
+                    else if (map[a][i] == 14) { cout << "▼"; }
+                    else { cout << "  "; }     
+                }
+            }
+        }cout << endl;
+        for (int i = 0; i < 10; i++) {
+            cout << "□";
+        }
+    }
+}
+
+bool stop;      //멈추는 키를 입력 받았는 지 확인
+int key;        //키값
+
+#define PORT   5500
+#define BUFFERSIZE 100
+#define NAMESIZE 30
+class Cannon {
+public:
+    Cannon() { cout << "Cannon 클래스를 생성하였습니다!" << endl; system("cls"); }
+    virtual void end_message() = 0;
+    ~Cannon() { cout << "Cannon 클래스를 소멸하였습니다!" << endl;}
+};
+unsigned  sendThread, receiveThread;
+class THD : public Cannon {
+public:
+    int Soc_Cli();
+    static unsigned __stdcall sendMessage(void* arg);
+    static unsigned __stdcall receiveMessage(void* arg);
+    void end_message() { cout << "당신은 상대방의 공격으로 패배하였습니다." << endl; }
+};
+
+int THD::Soc_Cli()
+{
+    WSADATA wsadata;
+    WSAStartup(MAKEWORD(2, 2), &wsadata);
+
+    /*서버에 접속해서 메시지를 주고 받는 클라이언트 소켓생성*/
+    int mySocket = socket(PF_INET, SOCK_STREAM, 0);
+    /*클라이언트 소켓생성에 실패하면 에러메시지를 출력하고 함수 종료*/
+    if (mySocket == -1) {
+        cout << "클라이언트 소켓을 생성하는데 실패 했니다" << endl;
+        return 0;
+    }
+    /*서버의 주소 정보를 저장할 구조체 serverAddress 선언*/
+    sockaddr_in serverAddress;
+    /*구조체를 0으로 초기화함*/
+    memset(&serverAddress, 0, sizeof(serverAddress));
+    /*서버의 IP 대입*/
+    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+    /*주소의 종류 대입*/
+    serverAddress.sin_family = AF_INET;
+    /*서버의 포트번호 대입*/
+    serverAddress.sin_port = htons(PORT);
+    /*서버에 접속*/
+    if (connect(mySocket, (sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
+        cout << "서버와 연결하는데 실패했습니다" << endl;
+        return 0;
+    }
+    /*키보드 입력을 읽어 들여서 서버로 전송하는 sendMessage 함수를 멀티 쓰레드로 시작함*/
+    unsigned long hSendThread = _beginthreadex(NULL, 0, sendMessage, (void*)mySocket, 0, &sendThread);
+    /*서버에서 전송한 다른 클라이언트들의 메시지를 읽어 들여서 화면에 출력하는 receiveMessage 함수를 멀티 쓰레드로 시작함*/
+    unsigned long hReceiveThread = _beginthreadex(NULL, 0, receiveMessage, (void*)mySocket, 0, &receiveThread);
+
+    /*sendMessage 함수를 멀티 쓰레드로 실행하는 sendThread 가 종료 할때 까지 main 함수가 대기 하도록 함*/
+    WaitForSingleObject((HANDLE)hSendThread, INFINITE);
+    /*receiveMessage 함수를 멀티 쓰레드로 실행하는 receiveThread 가 종료 할때 까지 main 함수가 대기 하도록 함*/
+    WaitForSingleObject((HANDLE)hReceiveThread, INFINITE);
+}
+
+int toserver[3] = { 0, };       //처음 생성하는 대포의 좌표를 보내는 변수
+int fromserver[9];      //서버에서 오는 클라이언트들의 좌표가 있는 변수
+int arr[3] = { 5, };        //대포의 움직임을 서버로 보내는 변수
+int fromserver_key[4];      //서버에서 부터 클라이언트들의 움직임을 받는 변수
+int die[3] = { -1, };       //죽음을 확인하기위한 함수
+
+unsigned __stdcall THD::sendMessage(void* arg) {
+    for (int i = 0; i < 9; i++) { fromserver[i] = -1; }     //초기화
+    do {      //랜덤으로 대포 위치 설정
+        srand((unsigned)(time)(NULL));
+        x = rand() % 10;
+        y = rand() % 10;
+    } while (map[x][y] != 1);
+    map[x][y] = rand() % 4 + 11;        //랜덤으로 방향 설절
+    toserver[0] = x;
+    toserver[1] = y;
+    toserver[2] = map[x][y];
+    /*서버와 데이터를 주고 받는 클라이언트 소켓을  멀티 쓰레드 시작시 main 함수에서 인자로 전달 받습니다. 인자로 전달 받은 클라이언트 소켓을 mySocket 에 대입합니다. */
+    int mySocket = (int)arg;
+    send(mySocket, (char*)toserver, sizeof(toserver), 0);       //대포 위치 전달
+    print();
+    _print(x);
+    die[0] = -1;        //확인하기위해 첫번째칸에 -1 대입
+    while (1) {
+        bool check = 0;      //벽이나 맵의 끝부분에 도달했을때를 알리기위함
+        key = _getch();
+        if (key == 224) {
+            key = _getch();
+            while (!check) {
+                //대포가 움직일때에 s를 누르게되면 방향키 키값 범위를 벗어나게되서 멈춤
+                if (_kbhit()) {
+                    int _key;
+                    _key = _getch();
+                    if (_key == 115) { check = 1; stop = 1; }       //s를 입력받았을 때
+                    else if (_key == 32) {      //스페이스바를 입력 받았을 때
+                        if (map[x][y] == 11) {
+                            for (int i = 1; i <= 3; i++) {
+                                if (map[x - i][y] != 2 && x - i >= 0) {
+                                    if (map[x - i][y] != 1) {
+                                        die[1] = x - i;
+                                        die[2] = y;
+                                        send(mySocket, (char*)die, sizeof(die), 0);
+                                    }
+                                    map[x - i][y] = 1;
+                                }
+                                else { i = 4; }
+                            }
+                            if (!stop) { key = 72; }
+                        }
+                        else if (map[x][y] == 12) {
+                            for (int i = 1; i <= 3; i++) {
+                                if (map[x][y - i] != 2 && y - i >= 0) {
+                                    if (map[x][y - i] != 1) {
+                                        die[1] = x;
+                                        die[2] = y - i;
+                                        send(mySocket, (char*)die, sizeof(die), 0);
+                                    }
+                                    map[x][y - i] = 1;
+                                }
+                                else { i = 4; }
+                            }
+                            if (!stop) { key = 75; }
+                        }
+                        else if (map[x][y] == 13) {
+                            for (int i = 1; i <= 3; i++) {
+                                if (map[x][y + i] != 2 && y + i <= 9) {
+                                    if (map[x][y + i] != 1) {
+                                        die[1] = x;
+                                        die[2] = y + i;
+                                        send(mySocket, (char*)die, sizeof(die), 0);
+                                    }
+                                    map[x][y + i] = 1;
+                                }
+                                else { i = 4; }
+                            }
+                            if (!stop) { key = 77; }
+                        }
+                        else if (map[x][y] == 14) {
+                            for (int i = 1; i <= 3; i++) {
+                                if (map[x + i][y] != 2 && x + i <= 9) {
+                                    if (map[x + i][y] != 1) {
+                                        die[1] = x + i;
+                                        die[2] = y;
+                                        send(mySocket, (char*)die, sizeof(die), 0);
+                                    }
+                                    map[x + i][y] = 1;
+                                }
+                                else { i = 4; }
+                            }
+                            if (!stop) { key = 80; }
+                        }
+                    }
+                    else {
+                        key = _key;
+                    }
+                }
+                else {      //방향키
+                    if (x != 0 && key == 72 && map[x - 1][y] == 1) { map[x][y] = 1; x--; map[x][y] = 11; stop = 0; }
+                    else if (y != 0 && key == 75 && map[x][y - 1] == 1) { map[x][y] = 1; y--; map[x][y] = 12; stop = 0; }
+                    else if (y != 9 && key == 77 && map[x][y + 1] == 1) { map[x][y] = 1; y++; map[x][y] = 13; stop = 0; }
+                    else if (x != 9 && key == 80 && map[x + 1][y] == 1) { map[x][y] = 1; x++; map[x][y] = 14; stop = 0; }
+                    else { check = 1; stop = 1; }
+                    if (!check) {
+                        arr[0] = x;
+                        arr[1] = y;
+                        arr[2] = map[x][y];
+                        send(mySocket, (char*)arr, sizeof(arr), 0);
+                        system("cls");
+                        print();
+                        _print(x);
+                        Sleep(speed[0]);
+                    }
+                }
+
+            }
+        }
+        else if (key == 32) {       
+            if (map[x][y] == 11) {
+                for (int i = 1; i <= 3; i++) {
+                    if (map[x - i][y] != 2 && x - i >= 0) {
+                        if (map[x - i][y] != 1) {
+                            die[1] = x - i;
+                            die[2] = y;
+                            send(mySocket, (char*)die, sizeof(die), 0);
+                        }
+                        map[x - i][y] = 1;
+                    }
+                    else { i = 4; }
+                }
+                if (!stop) { key = 72; }
+            }
+            else if (map[x][y] == 12) {
+                for (int i = 1; i <= 3; i++) {
+                    if (map[x][y - i] != 2 && y - i >= 0) {
+                        if (map[x][y - i] != 1) {
+                            die[1] = x;
+                            die[2] = y - i;
+                            send(mySocket, (char*)die, sizeof(die), 0);
+                        }
+                        map[x][y - i] = 1;
+                    }
+                    else { i = 4; }
+                }
+                if (!stop) { key = 75; }
+            }
+            else if (map[x][y] == 13) {
+                for (int i = 1; i <= 3; i++) {
+                    if (map[x][y + i] != 2 && y + i <= 9) {
+                        if (map[x][y + i] != 1) {
+                            die[1] = x;
+                            die[2] = y + i;
+                            send(mySocket, (char*)die, sizeof(die), 0);
+                        }
+                        map[x][y + i] = 1;
+                    }
+                    else { i = 4; }
+                }
+                if (!stop) { key = 77; }
+            }
+            else if (map[x][y] == 14) {
+                for (int i = 1; i <= 3; i++) {
+                    if (map[x + i][y] != 2 && x + i <= 9) {
+                        if (map[x + i][y] != 1) {
+                            die[1] = x + i;
+                            die[2] = y;
+                            send(mySocket, (char*)die, sizeof(die), 0);
+                        }
+                        map[x + i][y] = 1;
+                    }
+                    else { i = 4; }
+                }
+                if (!stop) { key = 80; }
+            }
+            system("cls");
+            print();
+            _print(x);
+            Sleep(speed[0]);
+        }
+    }
+    //send(mySocket, (char*)toserver, sizeof(toserver), 0); // toServer 배열에 저장된 메시지를 서버로 전송
+
+    return 0;
+}
+
+
+
+int Number[3] = { 0, };
+int Fog_server[3] = { 0, };      //서버로부터 어떤 모드인지를 불러오는 변수
+
+unsigned __stdcall THD::receiveMessage(void* arg) {
+    int mySocket = (int)arg; // main 함수로부터 전달받은 클라이언트 소켓을 mySocket 에 대입
+    int strlen = 0; // 서버에서 전달한 메시지의 바이트 수를 대입할 변수*/
+  /*서버에서 전달한 메시지를 저장할 변수. 서버에서는 메시지를 입력한 클라이언트의 대화명과 클라이언트의
+    메시지가 하나로 묶여서 전달됨*/
+    recv(mySocket, (char*)Number, sizeof(Number), 0);
+    recv(mySocket, (char*)Fog_server, sizeof(Fog_server), 0);
+    recv(mySocket, (char*)speed, sizeof(speed), 0);
+    if (Fog_server[0] == 1) {      //일반 모드
+        Fog = 0;
+    }
+    else if (Fog_server[0] == 2) {      //안개모드
+        Fog = 1;
+    }
+    while (1) {
+        recv(mySocket, (char*)fromserver, sizeof(fromserver), 0);       //서버에서 초기에 생성된 클라이언트들의 대포값 저장
+        if (fromserver[0] != -1) {
+            x2 = fromserver[0];
+            y2 = fromserver[1];
+            map[x2][y2] = fromserver[2] + 10;
+        }
+        if (fromserver[3] != -1) {
+            x3 = fromserver[3];
+            y3 = fromserver[4];
+            map[x3][y3] = fromserver[5] + 10;
+        }
+        if (fromserver[6] != -1) {
+            x4 = fromserver[6];
+            y4 = fromserver[7];
+            map[x4][y4] = fromserver[8] + 10;
+        }
+        map[x][y] = toserver[2];
+        system("cls");
+        print();
+        _print(x);
+        if (Number[0] == 1) {
+            if (fromserver[2] != -1)
+                break;
+        }
+        if (Number[0] == 2) {
+            if (fromserver[5] != -1)
+                break;
+        }
+        if (Number[0] == 3) {
+            if (fromserver[8] != -1)
+                break;
+        }
+    }  // while
+    while (1) {     //서버로부터 각 클라이언트들의 자표를 받아서 저장
+        recv(mySocket, (char*)fromserver_key, sizeof(fromserver_key), 0);
+        if (fromserver_key[0] == 1) {
+            map[x2][y2] = 1;
+            x2 = fromserver_key[1];
+            y2 = fromserver_key[2];
+            map[x2][y2] = fromserver_key[3] + 10;
+        }
+        else if (fromserver_key[0] == 2) {
+            map[x3][y3] = 1;
+            x3 = fromserver_key[1];
+            y3 = fromserver_key[2];
+            map[x3][y3] = fromserver_key[3] + 10;
+        }
+        else if (fromserver_key[0] == 3) {
+            map[x4][y4] = 1;
+            x4 = fromserver_key[1];
+            y4 = fromserver_key[2];
+            map[x4][y4] = fromserver_key[3] + 10;
+        }
+        else if (fromserver_key[0] == -1) {     //공격당해서 죽었을때
+            if (x == fromserver_key[1] && y == fromserver_key[2]) {
+                system("cls");
+                THD thd;
+                thd.end_message();
+                int a[3] = { 0, }; a[0] = 18;
+                send(mySocket, (char*)a, sizeof(a), 0);
+                return 0;
+            }
+            else {
+                map[fromserver_key[1]][fromserver_key[2]] = 1;
+            }
+        }
+
+        system("cls");
+        print();
+        _print(x);
+    }
+    return 0;
+}
+
+int main()
+{
+    THD cli;
+
+    cli.Soc_Cli();
+}
